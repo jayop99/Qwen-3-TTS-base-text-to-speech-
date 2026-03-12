@@ -1,11 +1,11 @@
 import runpod
 import torch
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
+from transformers import AutoProcessor, AutoModel
 
 model_id = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
 
 processor = AutoProcessor.from_pretrained(model_id)
-model = AutoModelForSpeechSeq2Seq.from_pretrained(
+model = AutoModel.from_pretrained(
     model_id,
     torch_dtype=torch.float16,
     device_map="auto"
@@ -16,8 +16,11 @@ def handler(job):
 
     inputs = processor(text=text, return_tensors="pt").to(model.device)
 
-    speech = model.generate(**inputs)
+    with torch.no_grad():
+        audio = model.generate(**inputs)
 
-    return {"audio": speech.tolist()}
+    audio = audio.cpu().numpy().tolist()
+
+    return {"audio": audio}
 
 runpod.serverless.start({"handler": handler})
