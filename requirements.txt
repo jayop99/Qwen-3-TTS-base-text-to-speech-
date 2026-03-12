@@ -1,9 +1,5 @@
 runpod
 torch
-transformers>=4.39
-accelerate
+qwen-tts
 soundfile
-scipy
-sentencepiece
-huggingface_hub
 numpy
