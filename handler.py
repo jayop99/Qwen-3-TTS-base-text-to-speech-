@@ -1,29 +1,30 @@
 import runpod
 import torch
-from transformers import AutoProcessor, AutoModelForSpeechSeq2Seq
+import soundfile as sf
+from qwen_tts import Qwen3TTSModel
 
 MODEL_ID = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-processor = AutoProcessor.from_pretrained(MODEL_ID)
-
-model = AutoModelForSpeechSeq2Seq.from_pretrained(
+model = Qwen3TTSModel.from_pretrained(
     MODEL_ID,
-    torch_dtype=torch.float16
-).to(device)
+    device_map=device,
+    dtype=torch.bfloat16
+)
 
 def handler(job):
 
     text = job["input"]["text"]
 
-    inputs = processor(text=text, return_tensors="pt").to(device)
-
-    with torch.no_grad():
-        speech = model.generate(**inputs)
+    wavs, sr = model.generate_voice_clone(
+        text=text,
+        language="English"
+    )
 
     return {
-        "audio": speech.cpu().numpy().tolist()
+        "audio": wavs[0].tolist(),
+        "sample_rate": sr
     }
 
 runpod.serverless.start({"handler": handler})
