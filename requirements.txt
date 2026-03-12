@@ -1,5 +1,7 @@
 runpod
 torch
 transformers
-soundfile
 accelerate
+soundfile
+scipy
+sentencepiece
